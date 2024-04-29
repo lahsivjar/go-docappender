@@ -63,8 +63,11 @@ func DecodeBulkRequest(r *http.Request) ([][]byte, esutil.BulkIndexerResponse) {
 		action := make(map[string]struct {
 			Index string `json:"_index"`
 		})
-		if err := json.NewDecoder(strings.NewReader(scanner.Text())).Decode(&action); err != nil {
-			panic(err)
+		txt := scanner.Text()
+		fmt.Println("\t[metadata]", txt)
+		if err := json.NewDecoder(strings.NewReader(txt)).Decode(&action); err != nil {
+			fmt.Println("ERROR while decoding metadata:", err)
+			continue
 		}
 		var actionType string
 		for actionType = range action {
@@ -74,8 +77,10 @@ func DecodeBulkRequest(r *http.Request) ([][]byte, esutil.BulkIndexerResponse) {
 		}
 
 		doc := append([]byte{}, scanner.Bytes()...)
+		fmt.Println("\t\t[doc]", string(doc))
 		if !json.Valid(doc) {
-			panic(fmt.Errorf("invalid JSON: %s", doc))
+			fmt.Println("ERROR", fmt.Errorf("invalid JSON: %s", doc))
+			continue
 		}
 		indexed = append(indexed, doc)
 
